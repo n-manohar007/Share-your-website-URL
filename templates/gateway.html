@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        html, body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        main {
+            flex: 1;
+        }
+
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 20px 0;
+            text-align:center;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        .navbar {
+            background-color: #343a40;
+        }
+
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .navbar .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+        }
+
+        .navbar .nav-link:hover {
+            color: #d1d1d1 !important;
+        }
+
+        .navbar-toggler {
+            border-color: #fff !important;
+        }
+
+        .container {
+            flex: 1;
+        }
+
+        /* Adjust column sizes */
+        .quantity {
+            width: 80px;
+        }
+
+        .total-price {
+            text-align: center;
+        }
+
+        /* Green Button Styling */
+        .btn-payment {
+            background-color: #28a745;
+            color: white;
+            font-size: 18px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .btn-payment:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="{{ url_for('customer.browse_vegetables') }}">Farm Fresh</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if session.get('username') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.browse_vegetables') }}">Browse Vegetables</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.view_cart') }}">Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.order_history') }}">Order History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile_route') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{{ url_for('logout_route') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login_route') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('register_route') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="text-center">Cashfree Payment</h2>
+        <div class="row">
+            <!-- Left Side - Delivery Form -->
+            <div class="col-md-7">
+                <h3>Delivery Information</h3>
+                 <form action="{{ url_for('payment.create_order') }}" method="POST" id="payment-form">
+                    <div class="form-group">
+                        <label for="customer_name">First Name:</label>
+                        <input type="text" id="customer_name" name="customer_name" value="{{ customer_name }}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer_last_name">Last Name:</label>
+                        <input type="text" id="customer_last_name" name="customer_last_name" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer_email">Email:</label>
+                        <input type="email" id="customer_email" name="customer_email" value="{{ customer_email }}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customer_phone">Phone:</label>
+                        <input type="text" id="customer_phone" name="customer_phone" value="{{ customer_phone }}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Street:</label>
+                        <input type="text" id="address" name="address" value="{{ address }}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city">City:</label>
+                        <input type="text" id="city" name="city" value="{{ city }}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="state">State:</label>
+                        <input type="text" id="state" name="state" value="{{ state }}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pincode">Zip Code:</label>
+                        <input type="text" id="pincode" name="pincode" value="{{ pincode }}" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="country">Country:</label>
+                        <input type="text" id="country" name="country" value="{{ country }}" class="form-control" required>
+                    </div>
+
+                    <!-- Cart Summary -->
+                    <div class="col-md-5 cart-summary">
+                        <h3>Cart Summary</h3>
+                        {% for item in cart_items %}
+                            <p>{{ item.name }} ({{ item.quantity }} x ₹{{ item.price }}) = ₹{{ item.quantity * item.price }}</p>
+                        {% endfor %}
+                        <p class="total">Total: ₹{{ total_amount }}</p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-payment mt-3">Proceed to Payment</button>
+
+<!-- Back to Dashboard Link -->
+<a href="{{ url_for('customer.browse_vegetables') }}" style="font-size: 1rem; color: #007bff; text-decoration: none; padding: 10px 15px; border: 1px solid #007bff; border-radius: 5px; display: block; text-align: center; margin-top: 20px;">Back to Browse vegetables</a
+                </form>
+            </div>
+        </div>
+    </div>
+
+        <!-- Footer -->
+    <footer class="bg-dark text-white text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="row">
+                <!-- About Section -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">About Farm Fresh</h5>
+                    <p>
+                        Farm Fresh connects customers with local farmers, ensuring fresh produce while supporting sustainable practices.
+                    </p>
+                </div>
+
+                <!-- Useful Links -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('customer.browse_vegetables') }}" class="text-white">Browse Vegetables</a></li>
+                        <li><a href="{{ url_for('customer.view_cart') }}" class="text-white">Cart</a></li>
+                        <li><a href="{{ url_for('customer.order_history') }}" class="text-white">Order History</a></li>
+                        <li><a href="{{ url_for('profile_route') }}" class="text-white">Profile</a></li>
+                        <li><a href="{{ url_for('logout_route') }}" class="text-danger">Logout</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone-alt"></i> +91 8520099999</li>
+                        <li><i class="fas fa-envelope"></i> support@farmfresh.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Wanaparthy, Telangana, India</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center p-3 bg-secondary">
+            © 2025 Farm Fresh. All rights reserved.
+        </div>
+    </footer>
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        html,body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensures the body takes up the full viewport height */
+    margin: 0;
+}
+
+.navbar {
+    background-color: #343a40 !important; /* Dark background */
+}
+
+.navbar-brand, .nav-link {
+    color: #fff !important; /* White text */
+}
+
+.nav-link:hover {
+    color: #f8f9fa !important; /* Lighter shade on hover */
+}
+
+main {
+    flex: 1; /* Allows main content to expand and push footer down */
+}
+
+footer {
+    background-color: #343a40; /* Same background color as navbar */
+    color: #fff; /* White text */
+    padding: 20px 0;
+   text-align:center;
+    margin-top: auto; /* Pushes footer to the bottom */
+}
+
+
+   
+        .vegetable-table {
+            margin: 20px auto;
+            width: 90%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+        .vegetable-table th, .vegetable-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .vegetable-table th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .action-buttons button {
+            margin: 5px;
+        }
+        #imagePreview {
+    max-width: 200px;
+    max-height: 200px;
+    display: block; /* Ensure it behaves like a block element */
+    border: 1px solid #ddd;
+    padding: 5px;
+    margin: 10px auto; /* Center the image horizontally */
+}
+
+        #imageInserter {
+            cursor: pointer;
+            max-width: 150px;
+            display: block;
+            margin: 0 auto;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .reset-button {
+            margin-top: 10px;
+        }
+
+        /* Center the preview image */
+        .preview-container {
+            text-align: center;
+            margin-top: 15px;
+        }
+    
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Farm Fresh</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if session.get('username') %}
+                    <li class="nav-item">
+                      <a class="nav-link" href="{{ url_for('farmer.farmer_dashboard', username=session['username']) }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('farmer.view_orders') }}">Order List</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile_route') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{{ url_for('logout_route') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login_route') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('register_route') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard Content -->
+    <main>
+        <section id="dashboard-home">
+            <h1 class="text-center">Welcome, {{ session.get('username', 'Guest') }}</h1>
+            <h2 class="text-center">Manage Your Vegetables</h2>
+
+            <!-- Vegetable Table -->
+            <table class="table table-bordered text-center mt-4">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Photo</th>
+                        <th>Name</th>
+                        <th>Price (₹/kg)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vegetable in vegetables %}
+                        <tr>
+                            <td>
+                                {% if vegetable.photo_filename %}
+                                    <img src="{{ url_for('static', filename='uploads/' + vegetable.photo_filename) }}" 
+                                         alt="{{ vegetable.vegetable_name }}" width="80">
+                                {% else %}
+                                    <p>No photo</p>
+                                {% endif %}
+                            </td>
+                            <td>{{ vegetable.vegetable_name }}</td>
+                            <td>₹{{ vegetable.price | int}}</td>
+                            <td>
+                           <a class="btn btn-primary btn-sm" href="{{ url_for('farmer.adjust_price', username=session['username'], vegetable_id=vegetable._id) }}">Modify</a>
+                                <form method="POST" action="{{ url_for('farmer.remove_vegetable', username=session['username'], vegetable_id=vegetable._id) }}" style="display:inline;">
+                                    <button class="btn btn-danger btn-sm" type="submit">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    <!-- Add New Vegetable Button -->
+                    <tr>
+                        <td colspan="4">
+                            <button class="btn btn-success" data-toggle="modal" data-target="#addVegetableModal">
+                                <i class="fas fa-plus"></i> Add New Vegetable
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+     
+        <!-- Add New Vegetable Modal -->
+        <div class="modal fade" id="addVegetableModal" tabindex="-1" role="dialog" aria-labelledby="addVegetableModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addVegetableModalLabel">Add a New Vegetable</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="vegetable_name">Vegetable Name:</label>
+                                <input type="text" class="form-control" name="vegetable_name" id="vegetable_name" required placeholder="e.g., Tomato">
+                            </div>
+                            <div class="form-group">
+                                <label for="price">Price (₹ per kg):</label>
+                                <input type="number" class="form-control" name="price" id="price" step="0.01" required placeholder="e.g., 50">
+                            </div>
+                            <div class="form-group">
+                                <label for="photo">Photo (Optional):</label>
+                                <!-- Image Inserter (Clickable) -->
+                                <div class="text-center">
+                                    <img 
+                                        id="imageInserter" 
+                                        src="https://static.vecteezy.com/system/resources/previews/004/640/699/non_2x/circle-upload-icon-button-isolated-on-white-background-vector.jpg" 
+                                        alt="Upload Image" 
+                                        class="img-thumbnail" 
+                                        style="cursor: pointer; max-width: 150px;" 
+                                        onclick="document.getElementById('photo').click();">
+                                </div>
+
+                                <!-- Actual File Input (Hidden) -->
+                                <input type="file" class="form-control-file" name="photo" id="photo" accept="image/*" style="display: none;" onchange="previewImage(event)">
+                            </div>
+                            <div class="form-group preview-container">
+                                <!-- Image Preview (Initially Hidden) -->
+                                <img id="imagePreview" src="" alt="Preview Image" style="display: none; max-width: 200px; max-height: 200px; border: 1px solid #ddd; padding: 5px;">
+                                <button type="button" class="btn btn-warning reset-button" style="display: none;"   onclick="document.getElementById('photo').click();">>Change Image</button>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block">Add Vegetable</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <h5>Farm Fresh</h5>
+                    <p>Your trusted source for fresh, local vegetables directly from farmers.</p>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-3 footer-links">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('farmer.farmer_dashboard', username=session['username']) }}"class="text-white">Dashboard</a></li>
+                        <li><a href="{{ url_for('farmer.view_orders') }}"class="text-white">Order List</a></li>
+                        <li><a href="{{ url_for('profile_route') }}"class="text-white">Profile</a></li>
+<li><a href="{{ url_for('logout_route') }}"class="text-danger">Logout</a></li>
+   
+                    </ul>
+                </div>               
+ <!-- Contact Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone-alt"></i> +91 8520099999</li>
+                        <li><i class="fas fa-envelope"></i> support@farmfresh.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Wanaparthy, Telangana, India</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center p-3 bg-secondary">
+            © 2025 Farm Fresh. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Full jQuery (Fix for image preview) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- Image Preview Script -->
+    <script>
+        function previewImage(event) {
+            const imagePreview = document.getElementById('imagePreview');
+            const imageInserter = document.getElementById('imageInserter');
+            const resetButton = document.querySelector('.reset-button');
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    // Hide the image inserter and display the preview
+                    imageInserter.style.display = 'none';
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    resetButton.style.display = 'inline-block'; // Show reset button
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imageInserter.style.display = 'block';
+                imagePreview.style.display = 'none';
+                resetButton.style.display = 'none';
+            }
+        }
+
+       
+    </script>
+</body>
+</html>

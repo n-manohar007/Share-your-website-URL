@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        html, body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .table {
+            margin-top: 20px;
+        }
+
+        .no-cart {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #6c757d;
+        }
+
+        .alert-info {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: auto;
+            width: 100%;
+        }
+
+        .navbar {
+            background-color: #343a40;
+        }
+
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .navbar .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+        }
+
+        .navbar .nav-link:hover {
+            color: #d1d1d1 !important;
+        }
+
+        .navbar-toggler {
+            border-color: #fff !important;
+        }
+
+        .container {
+            flex: 1;
+        }
+
+        /* Adjust column sizes */
+        .quantity {
+            width: 80px;
+        }
+
+        .total-price {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="{{ url_for('customer.browse_vegetables') }}">Farm Fresh</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if session.get('username') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.browse_vegetables') }}">Browse Vegetables</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.view_cart') }}">Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.order_history') }}">Order History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile_route') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{{ url_for('logout_route') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login_route') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('register_route') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <h2>Your Shopping Cart</h2>
+<!-- Back to Dashboard Link -->
+<a href="{{ url_for('customer.browse_vegetables') }}" style="font-size: 1rem; color: #007bff; text-decoration: none; padding: 5px 10px; border: 1px solid #007bff; border-radius: 5px;">Back to Browse vegetables</a>
+        <table class="table table-bordered"
+            <thead>
+                <tr>
+                    <th>Vegetable Name</th>
+                    <th>Price</th>
+                    <th>Farmer</th>
+                    <th>Quantity</th>
+                    <th>Total Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="cart-body">
+                {% if cart and cart.vegetables %}
+                    {% for item in cart.vegetables %}
+                        <tr>
+                            <td>{{ item.vegetable_name }}</td>
+                            <td>₹{{ item.price }}</td>
+                            <td>{{ item.farmer_username }}</td>
+                            <td>
+                                <form method="POST" action="/view_cart" class="form-inline">
+                                    <input type="number" name="new_quantity" value="{{ item.quantity }}" min="1" class="form-control w-50 quantity" data-price="{{ item.price }}">
+                                    <input type="hidden" name="vegetable_id" value="{{ item.vegetable_id }}">
+                                    <input type="hidden" name="action" value="update_quantity">
+                                </form>
+                            </td>
+                            <td class="total-price">₹{{ item.quantity * item.price }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('customer.view_cart') }}">
+                                    <input type="hidden" name="vegetable_id" value="{{ item.vegetable_id }}">
+                                    <input type="hidden" name="action" value="remove_from_cart">
+                                    <button type="submit" name="submit" class="btn btn-danger btn-sm">Remove</button>                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center">Your cart is empty. Start adding items to your cart!</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        {% if cart and cart.vegetables %}
+              <div class="text-right">
+                <strong>Total Price: ₹<span id="total_price_display">0</span></strong>
+            </div>
+       <form method="POST" action="{{ url_for('customer.checkout') }}">
+    <input type="hidden" name="action" value="checkout">
+    <button type="submit" class="btn btn-success" {% if not cart or not cart.vegetables %}disabled{% endif %}>
+        Proceed to Checkout
+    </button>
+</form>
+             
+        {% endif %}
+    </div>
+
+
+
+
+<!-- Footer -->
+    <footer class="bg-dark text-white text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="row">
+                <!-- About Section -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">About Farm Fresh</h5>
+                    <p>
+                        Farm Fresh connects customers with local farmers, ensuring fresh produce while supporting sustainable practices.
+                    </p>
+                </div>
+
+                <!-- Useful Links -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('customer.browse_vegetables') }}" class="text-white">Browse Vegetables</a></li>
+                        <li><a href="{{ url_for('customer.view_cart') }}" class="text-white">Cart</a></li>
+                        <li><a href="{{ url_for('customer.order_history') }}" class="text-white">Order History</a></li>
+                        <li><a href="{{ url_for('profile_route') }}" class="text-white">Profile</a></li>
+                        <li><a href="{{ url_for('logout_route') }}" class="text-danger">Logout</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone-alt"></i> +91 8520099999</li>
+                        <li><i class="fas fa-envelope"></i> support@farmfresh.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Wanaparthy, Telangana, India</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center p-3 bg-secondary">
+            © 2025 Farm Fresh. All rights reserved.
+        </div>
+    </footer>
+
+
+    <script>
+        function updateTotalPrice() {
+            let totalPrice = 0;
+            document.querySelectorAll('.quantity').forEach(input => {
+                let quantity = input.value;
+                let price = input.dataset.price;
+                let total = quantity * price;
+                input.closest('tr').querySelector('.total-price').innerText = '₹' + total;
+                totalPrice += total;
+            });
+            document.getElementById('total_price_display').innerText = totalPrice;
+        }
+
+        document.querySelectorAll('.quantity').forEach(input => {
+            input.addEventListener('input', updateTotalPrice);
+        });
+
+        window.onload = updateTotalPrice;
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

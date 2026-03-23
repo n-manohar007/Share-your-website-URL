@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+ /* Navbar Styling */
+        .navbar {
+            background-color: #343a40 !important;
+        }
+
+        .navbar-brand, .nav-link {
+            color: #fff !important;
+        }
+
+        .nav-link:hover {
+            color: #f8f9fa !important;
+        }
+
+        .update-form {
+            display: none; /* Hide the update form initially */
+        }
+
+
+
+/* Ensure the body takes at least the full height of the viewport */
+   html,body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+          
+flex:1;
+        }
+
+main{
+flex:1;
+}
+
+/* Make the main content take up remaining space */
+
+
+/* Footer should always stay at the bottom */
+footer {
+    background-color: #343a40;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    margin-top:auto;
+    width: 100%;
+}
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="{{ url_for('customer.browse_vegetables') }}">Farm Fresh</a>
+    <!-- Hamburger toggle button -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            {% if session['username'] %}
+                {% if session['role'] == 'customer' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.browse_vegetables') }}">Browse Vegetables</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.view_cart') }}">Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.order_history') }}">Order History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile_route') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout_route') }}">Logout</a>
+                    </li>
+                {% elif session['role'] == 'farmer' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('farmer.farmer_dashboard', username=session['username']) }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('farmer.view_orders') }}">Order List</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile_route') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout_route') }}">Logout</a>
+                    </li>
+                {% endif %}
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login_route') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('register_route') }}">Register</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+    
+    <div class="container mt-4">
+        <h2>Profile of {{ user.username }}</h2>
+
+        <!-- Display flash messages -->
+
+           <!-- Flash Messages -->
+
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Profile Information</h3>
+                <ul class="list-group">
+                    <li class="list-group-item"><strong>Username:</strong> {{ user.username }}</li>
+                    <li class="list-group-item"><strong>Phone Number:</strong> {{ user.phone or "Not Provided" }}</li>
+                    <li class="list-group-item"><strong>Password:</strong> (Hidden for security purposes)</li>
+                    <li class="list-group-item"><strong>Role:</strong> {{ user.role }}</li>
+                </ul>
+
+                <!-- Button to toggle update form -->
+                <button class="btn btn-primary mt-3" onclick="toggleUpdateForm()">Update Profile</button>
+
+                <!-- Update Username, Password, or Phone Form -->
+                <div class="update-form mt-3">
+                    <h3>Update Profile</h3>
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="username">New Username:</label>
+                            <input type="text" name="username" id="username" class="form-control" placeholder="Enter new username">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">New Phone Number:</label>
+                            <input type="text" name="phone" id="phone" class="form-control" placeholder="Enter new 10-digit phone number" pattern="\d{10}" title="Enter a valid 10-digit phone number">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">New Password:</label>
+                            <input type="password" name="password" id="password" class="form-control" placeholder="Enter new password">
+                        </div>
+                        <button type="submit" class="btn btn-success">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Footer -->
+    <footer class="bg-dark text-white text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="row">
+                <!-- About Section -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">About Farm Fresh</h5>
+                    <p>
+                        Farm Fresh connects customers with local farmers, ensuring fresh produce while supporting sustainable practices.
+                    </p>
+                </div>
+                 
+                <!-- Useful Links -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Quick Links</h5>
+                            {% if session['username'] %}
+                {% if session['role'] == 'customer' %}
+                   <!-- About Section -->
+              
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('customer.browse_vegetables') }}" class="text-white">Browse Vegetables</a></li>
+                        <li><a href="{{ url_for('customer.view_cart') }}" class="text-white">Cart</a></li>
+                        <li><a href="{{ url_for('customer.order_history') }}" class="text-white">Order History</a></li>
+                        <li><a href="{{ url_for('profile_route') }}" class="text-white">Profile</a></li>
+                        <li><a href="{{ url_for('logout_route') }}" class="text-danger">Logout</a></li>
+                    </ul>
+                </div>
+
+    
+                {% elif session['role'] == 'farmer' %}
+          
+                    <ul class="list-unstyled">
+                    <li><a href="{{ url_for('farmer.farmer_dashboard', username=session['username']) }}"class="text-white">Dashboard</a></li>
+                        <li><a href="{{ url_for('farmer.view_orders') }}"class="text-white">Order List</a></li>
+                        <li><a href="{{ url_for('profile_route') }}"class="text-white">Profile</a></li>
+<li><a href="{{ url_for('logout_route') }}"class="text-danger">Logout</a></li>
+  
+                    </ul>       
+                {% endif %}
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('login_route') }}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('register_route') }}">Register</a>
+                </li>
+            {% endif %}
+    </div>
+                  <!-- Contact Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone-alt"></i> +91 8520099999</li>
+                        <li><i class="fas fa-envelope"></i> support@farmfresh.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Hyderabad, Telangana, India</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center p-3 bg-secondary">
+            © 2025 Farm Fresh. All rights reserved.
+        </div>
+    </footer>
+    <script>
+        function toggleUpdateForm() {
+            var form = document.querySelector('.update-form');
+            form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none';
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>

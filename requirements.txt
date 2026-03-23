@@ -1,0 +1,5 @@
+Flask==2.2.2
+pymongo==4.1.1
+werkzeug==2.2.2
+bson==0.5.10
+cashfree_pg==1.0.0#If it's a real package, or use the actual dependency for Cashfree

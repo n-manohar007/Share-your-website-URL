@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+</head>
+<body>
+    <div class="background-container">
+        <div class="content-container">
+            <h1>Welcome to the Farmer to Consumer Marketplace, Hyderabad</h1>
+            <p>We connect farmers directly with consumers for fresh produce.</p>
+
+            <!-- Display flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        <ul>
+                            {% for category, message in messages %}
+                                <li class="{{ category }}">{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="auth-links">
+                <button id="loginBtn" class="button">Login</button>
+                <button id="registerBtn" class="button">Register</button><br>
+                
+            </div>
+            
+
+            <div class="web-app-links">
+                <h3>Explore Other Farmer Marketplaces:</h3>
+                <ul class="horizontal-list">
+                    <li>
+                        <a href="https://www.ninjacart.com" target="_blank">
+                            <img src="{{ url_for('static', filename='icons/ninjacart.png') }}" alt="Ninjacart Icon" class="marketplace-icon">
+                           
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.dehaat.com" target="_blank">
+                            <img src="{{ url_for('static', filename='icons/dehaat.png') }}" alt="DeHaat Icon" class="marketplace-icon">
+                            
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.farmizen.com" target="_blank">
+                            <img src="{{ url_for('static', filename='icons/farmizen.png') }}" alt="Farmizen Icon" class="marketplace-icon">
+                            
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Login -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeLogin">&times;</span>
+            <h1>Login</h1>
+     <form method="POST" action="{{ url_for('login_route') }}">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required placeholder="Enter user name">
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
+
+                <label for="role">Role:</label>
+                <select id="role" name="role"  required >
+                    <option value=""disabled selected>Select Role</option>
+
+                    <option value="farmer">Farmer</option>
+                    <option value="customer">Customer</option>
+                </select>
+
+                <button type="submit" class="button">Login</button>
+            </form>
+            Don't have an account? <a href="javascript:void(0);" id="openRegister">Register</a>
+        </div>
+    </div>
+
+    <!-- Modal for Register -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeRegister">&times;</span>
+            <h1>Register</h1>
+            <form method="POST" action="{{ url_for('register_route') }}">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required placeholder="Enter user name">
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
+
+                <label for="phone">Phone Number:</label>
+                <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" required placeholder="Enter 10-digit phone number">
+                <small>Must be exactly 10 digits</small>
+
+                <label for="role">Role:</label>
+                <select id="role" name="role" required>
+                    <option value=""disabled selected>Select Role</option>
+
+                    <option value="farmer">Farmer</option>
+                    <option value="customer">Customer</option>
+                </select>
+
+                <button type="submit" class="button">Register</button>
+            </form>
+            Already have an account? <a href="javascript:void(0);" id="openLogin">Login</a>
+        </div>
+    </div>
+
+    <script>
+        // Get modal elements
+        var loginModal = document.getElementById("loginModal");
+        var registerModal = document.getElementById("registerModal");
+
+        // Get buttons
+        var loginBtn = document.getElementById("loginBtn");
+        var registerBtn = document.getElementById("registerBtn");
+
+        // Get <span> elements that close the modals
+        var closeLogin = document.getElementById("closeLogin");
+        var closeRegister = document.getElementById("closeRegister");
+
+        // Open the login modal when "Login" button is clicked
+        loginBtn.onclick = function() {
+            loginModal.style.display = "block";
+        }
+
+        // Open the register modal when "Register" button is clicked
+        registerBtn.onclick = function() {
+            registerModal.style.display = "block";
+        }
+
+        // Close the login modal when the "X" is clicked
+        closeLogin.onclick = function() {
+            loginModal.style.display = "none";
+        }
+
+        // Close the register modal when the "X" is clicked
+        closeRegister.onclick = function() {
+            registerModal.style.display = "none";
+        }
+
+        // Close the login modal if the user clicks outside of the modal content
+        window.onclick = function(event) {
+            if (event.target == loginModal) {
+                loginModal.style.display = "none";
+            }
+            if (event.target == registerModal) {
+                registerModal.style.display = "none";
+            }
+        }
+
+        // Open register modal from login modal
+        document.getElementById("openRegister").onclick = function() {
+            loginModal.style.display = "none";
+            registerModal.style.display = "block";
+        }
+
+        // Open login modal from register modal
+        document.getElementById("openLogin").onclick = function() {
+            registerModal.style.display = "none";
+            loginModal.style.display = "block";
+        }
+    </script>
+</body>
+</html>

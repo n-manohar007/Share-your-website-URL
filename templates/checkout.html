@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashfree Checkout</title>
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 300px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #payNow {
+            background-color: #28a745;
+            color: white;
+            font-size: 18px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #payNow:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        #payNow:hover:enabled {
+            background-color: #218838;
+        }
+
+        #error-message {
+            color: red;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Processing Payment...</h2>
+
+        <!-- Loading Spinner -->
+        <div id="spinner" class="spinner"></div>
+
+        <!-- Error Message -->
+        <p id="error-message" style="display: none;">Error: Payment Session ID is missing.</p>
+
+        <!-- Payment Button -->
+        <button id="payNow" disabled>Loading...</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const paymentSessionId = "{{ payment_session_id }}"; // Injected from Flask
+            const payButton = document.getElementById("payNow");
+            const errorMessage = document.getElementById("error-message");
+            const spinner = document.getElementById("spinner");
+
+            if (!paymentSessionId) {
+                errorMessage.style.display = "block"; // Show error message
+                spinner.style.display = "none"; // Hide spinner
+                return;
+            }
+
+            payButton.textContent = "Pay Now"; // Update button text
+            payButton.disabled = false; // Enable button
+            spinner.style.display = "none"; // Hide spinner
+
+            // Detect the environment (Change in Flask backend for live use)
+            const cashfree = Cashfree({ mode: "sandbox" });  // Change to "production" in live mode
+
+            payButton.addEventListener("click", () => {
+                let checkoutOptions = {
+                    paymentSessionId: paymentSessionId,
+                    redirectTarget: "_self",
+                };
+                cashfree.checkout(checkoutOptions);
+            });
+        });
+    </script>
+</body>
+</html>

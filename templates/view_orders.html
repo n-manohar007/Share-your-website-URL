@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer's Orders</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Navbar Styling */
+        .navbar {
+            background-color: #343a40;
+        }
+        .navbar-brand, .nav-link {
+            color: #f8f9fa;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #ddd;
+        }
+
+        /* Container Styling */
+        .container {
+            margin-top: 30px;
+        }
+
+        /* Order Card Styling */
+        .order-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 5px solid #6c757d;
+        }
+
+        .order-icon {
+            font-size: 30px;
+            margin-right: 15px;
+        }
+
+        .order-details {
+            flex-grow: 1;
+        }
+
+        .order-status select {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        /* Status Color Indicators */
+        .status-pending { border-left-color: #6c757d; }  /* Gray */
+        .status-processing { border-left-color: #ffc107; }  /* Yellow */
+        .status-shipped { border-left-color: #007bff; }  /* Blue */
+        .status-delivered { border-left-color: #28a745; }  /* Green */
+ .status-cancelled { border-left-color: red; }  
+
+        html,body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensures the body takes up the full viewport height */
+    margin: 0;
+}
+
+
+footer {
+    background-color: #343a40; /* Same background color as navbar */
+    color: #fff; /* White text */
+    padding: 20px 0;
+   text-align:center;
+    margin-top: auto; /* Pushes footer to the bottom */
+}
+
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Farm Fresh</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if session.get('username') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('farmer.farmer_dashboard', username=session['username']) }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('farmer.view_orders') }}">Order List</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile_route') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{{ url_for('logout_route') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login_route') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('register_route') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+<div class="container">
+    <h2>Orders for {{ farmer_username }}</h2>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alert alert-info">
+                {% for category, message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Orders List -->
+    {% if orders %}
+        {% for order in orders %}
+            <div class="order-card 
+                {% if order.status == 'Pending' %} status-pending
+                {% elif order.status == 'Food Processing' %} status-processing
+                {% elif order.status == 'Shipped' %} status-shipped
+                {% elif order.status == 'Delivered' %} status-delivered
+                {% elif order.status == 'Cancelled' %} status-cancelled
+                {% endif %}">
+                
+                <div class="order-icon">
+                    <i class="fas 
+                        {% if order.status == 'Pending' %} fa-box
+                        {% elif order.status == 'Food Processing' %} fa-blender
+                        {% elif order.status == 'Shipped' %} fa-truck
+                        {% elif order.status == 'Delivered' %} fa-check-circle
+                        {% elif order.status == 'Cancelled' %} fa-ban
+                        {% endif %}">
+                    </i>
+                </div>
+
+                <div class="order-details">
+                    <h4>{{ order.vegetable_name }} x {{ order.quantity }}</h4>
+                    <p><strong>Price:</strong> ₹{{ order.cost }}</p>
+                    <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+                    <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+                    <p><strong>Order Time:</strong> {{ order.order_time | datetimeformat }}</p>
+                </div>
+
+                <div>
+                    <form action="{{ url_for('farmer.update_status', order_id=order._id) }}" method="post">
+                        <select name="status" class="form-control" onchange="this.form.submit()">
+                            <option value="Pending" {% if order.status == "Pending" %}selected{% endif %}>Pending</option>
+                            <option value="Cancelled" {% if order.status == "Cancelled" %}selected{% endif %}>Cancelled</option>
+                            <option value="Food Processing" {% if order.status == "Food Processing" %}selected{% endif %}>Food Processing</option>
+                            <option value="Shipped" {% if order.status == "Shipped" %}selected{% endif %}>Shipped</option>
+                            <option value="Delivered" {% if order.status == "Delivered" %}selected{% endif %}>Delivered</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center">No orders have been placed yet.</p>
+    {% endif %}
+</div>
+    
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <h5>Farm Fresh</h5>
+                    <p>Your trusted source for fresh, local vegetables directly from farmers.</p>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-3 footer-links">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('farmer.farmer_dashboard', username=session['username']) }}"class="text-white">Dashboard</a></li>
+                        <li><a href="{{ url_for('farmer.view_orders') }}"class="text-white">Order List</a></li>
+                        <li><a href="{{ url_for('profile_route') }}"class="text-white">Profile</a></li>
+<li><a href="{{ url_for('logout_route') }}"class="text-danger">Logout</a></li>
+   
+                    </ul>
+                </div>               
+ <!-- Contact Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone-alt"></i> +91 8520099999</li>
+                        <li><i class="fas fa-envelope"></i> support@farmfresh.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Hyderabad, Telangana, India</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center p-3 bg-secondary">
+            © 2025 Farm Fresh. All rights reserved.
+        </div>
+    </footer>
+<!-- Bootstrap JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script>
+    document.querySelectorAll('select[name="status"]').forEach(select => {
+        select.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+</script>
+
+</body>
+</html>

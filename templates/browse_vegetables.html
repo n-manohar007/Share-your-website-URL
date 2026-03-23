@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Vegetables</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        /* Navbar Styling */
+        .navbar {
+            background-color: #343a40 !important;
+        }
+
+        .navbar-brand, .nav-link {
+            color: #fff !important;
+        }
+
+        .nav-link:hover {
+            color: #f8f9fa !important;
+        }
+
+        /* Vegetable Card Styles */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+        }
+
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .card-body {
+            text-align: center;
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .card-text {
+            font-size: 1rem;
+            color: #777;
+        }
+
+        h3 {
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Responsive Grid Layout */
+        .vegetable-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        /* Ensure the body takes at least the full height of the viewport */
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            flex: 1;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        /* Make the main content take up remaining space */
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: auto;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="{{ url_for('customer.browse_vegetables') }}">Farm Fresh</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                {% if session.get('username') %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.browse_vegetables') }}">Browse Vegetables</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.view_cart') }}">Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('customer.order_history') }}">Order History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile_route') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="{{ url_for('logout_route') }}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login_route') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('register_route') }}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <h2 class="text-center">Welcome, {{ session.get('username', 'Guest') }}!</h2>
+
+
+        <h3>Browse Vegetables</h3>
+
+    
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert alert-info">
+                    {% for category, message in messages %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% endwith %}
+
+        <!-- Vegetable Display Grid -->
+        <div class="vegetable-grid">
+            {% for vegetable in vegetables %}
+                <div class="card">
+                    <img src="{{ url_for('static', filename='uploads/' + (vegetable.photo_filename or 'default_image.jpg')) }}" 
+                         class="card-img-top" 
+                         alt="{{ vegetable.vegetable_name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ vegetable.vegetable_name }}</h5>
+                        <p class="card-text">Price: ₹{{ vegetable.price }}</p>
+                        <p class="card-text">Farmer: {{ vegetable.farmer_username }}</p>
+           <form method="POST" action="{{ url_for('customer.browse_vegetables') }}">
+    <input type="hidden" name="vegetable_id" value="{{ vegetable._id }}">
+
+    <!-- Quantity Input for Add to Cart and Order Now -->
+     <label for="quantity" style="text-align:center;">Quantity : </label>
+    <input type="number" name="quantity" value="1" min="1" style="width:50px;"required>
+
+    <!-- Add to Cart and Order Now Buttons -->
+    <button type="submit" name="action" value="add_to_cart" class="btn btn-primary">Add to Cart</button>
+    <button type="submit" name="action" value="order" class="btn btn-success">Order Now</button>
+</form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="row">
+                <!-- About Section -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">About Farm Fresh</h5>
+                    <p>
+                        Farm Fresh connects customers with local farmers, ensuring fresh produce while supporting sustainable practices.
+                    </p>
+                </div>
+
+                <!-- Useful Links -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('customer.browse_vegetables') }}" class="text-white">Browse Vegetables</a></li>
+                        <li><a href="{{ url_for('customer.view_cart') }}" class="text-white">Cart</a></li>
+                        <li><a href="{{ url_for('customer.order_history') }}" class="text-white">Order History</a></li>
+                        <li><a href="{{ url_for('profile_route') }}" class="text-white">Profile</a></li>
+                        <li><a href="{{ url_for('logout_route') }}" class="text-danger">Logout</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="text-uppercase">Contact Us</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-phone-alt"></i> +91 8520099999</li>
+                        <li><i class="fas fa-envelope"></i> support@farmfresh.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i>Wanaparthy, Telangana, India</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center p-3 bg-secondary">
+            © 2025 Farm Fresh. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+</body>
+</html>
